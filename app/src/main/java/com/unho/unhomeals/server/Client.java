@@ -25,16 +25,16 @@ import com.unho.unhomeals.server.DTO.ServerResponse;
 import com.unho.unhomeals.server.DTO.UserRequestData;
 import com.unho.unhomeals.server.DTO.UserResponse;
 
-import java.io.IOException;
 import java.util.List;
 
+import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Client {
     private static final String BASE_URL = "http://0.tcp.jp.ngrok.io:15171/"; // TODO: set BASE_URL
-
     @NonNull
     private final IService service;
 
@@ -47,47 +47,97 @@ public class Client {
         return new Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create(gson)).build();
     }
 
-    public void test(final Callback<Void> callback) {
+    public void test(CustomCallback<Void> callback) {
         service.test().enqueue(callback);
     }
 
-    public void login(@NonNull String userId, final Callback<LoginResponse> callback) {
+    public void login(
+            @NonNull String userId,
+            @NonNull CustomCallback<LoginResponse> callback) {
         service.login(new LoginRequestData(userId)).enqueue(callback);
     }
 
-    public void logout(@NonNull String userId, @NonNull String sessionId, final Callback<LogoutResponse> callback) {
+    public void logout(
+            @NonNull String userId,
+            @NonNull String sessionId,
+            @NonNull CustomCallback<LogoutResponse> callback) {
         service.logout(new LogoutRequestData(userId, sessionId)).enqueue(callback);
     }
 
-    public void apply(@NonNull String sessionId, boolean apply, final Callback<ServerResponse> callback) {
+    public void apply(
+            @NonNull String sessionId,
+            boolean apply,
+            @NonNull CustomCallback<ServerResponse> callback) {
         service.apply(new ApplyRequestData(sessionId, apply)).enqueue(callback);
     }
 
-    public void getApplications(@NonNull String sessionId, final Callback<GetApplicationsResponse> callback) {
+    public void getApplications(
+            @NonNull String sessionId,
+            @NonNull CustomCallback<GetApplicationsResponse> callback) {
         service.getApplications(new GetApplicationsRequestData(sessionId)).enqueue(callback);
     }
 
-    public void hasApplied(@NonNull String sessionId, @NonNull String userId, final Callback<HasAppliedResponse> callback) {
+    public void hasApplied(
+            @NonNull String sessionId,
+            @NonNull String userId,
+            @NonNull CustomCallback<HasAppliedResponse> callback) {
         service.hasApplied(new HasAppliedRequestData(sessionId, userId)).enqueue(callback);
     }
 
-    public void postRates(@NonNull String sessionId, @NonNull List<Rate> rates, short totalRate, final Callback<ServerResponse> callback) {
+    public void postRates(
+            @NonNull String sessionId,
+            @NonNull List<Rate> rates,
+            short totalRate,
+            @NonNull CustomCallback<ServerResponse> callback) {
         service.postRate(new PostRateRequestData(sessionId, rates, totalRate)).enqueue(callback);
     }
 
-    public void getRates(@NonNull String sessionId, final Callback<GetRatesResponse> callback) {
+    public void getRates(
+            @NonNull String sessionId,
+            @NonNull CustomCallback<GetRatesResponse> callback) {
         service.getRates(new GetRatesRequestData(sessionId)).enqueue(callback);
     }
 
-    public void getUserRates(@NonNull String sessionId, @NonNull String userId, final Callback<GetUserRatesResponse> callback) {
+    public void getUserRates(
+            @NonNull String sessionId,
+            @NonNull String userId,
+            @NonNull CustomCallback<GetUserRatesResponse> callback) {
         service.getUserRates(new GetUserRatesRequestData(sessionId, userId)).enqueue(callback);
     }
 
-    public void rank(@NonNull String sessionId, final Callback<RankResponse> callback) {
+    public void rank(
+            @NonNull String sessionId,
+            @NonNull CustomCallback<RankResponse> callback) {
         service.rank(new RankRequestData(sessionId)).enqueue(callback);
     }
 
-    public void user(@NonNull String sessionId, @NonNull String userId, final Callback<UserResponse> callback) {
+    public void user(
+            @NonNull String sessionId,
+            @NonNull String userId,
+            @NonNull CustomCallback<UserResponse> callback) {
         service.user(new UserRequestData(sessionId, userId)).enqueue(callback);
+    }
+
+    public abstract static class CustomCallback<T> implements Callback<T> {
+        @Override
+        public void onResponse(
+                @NonNull Call<T> call,
+                Response<T> resp) {
+            if (!resp.isSuccessful()) this.onResponseError(call, resp);
+            else onResponseSuccess(call, resp);
+        }
+
+        @Override
+        public abstract void onFailure(
+                @NonNull Call<T> call,
+                @NonNull Throwable t);
+
+        public abstract void onResponseSuccess(
+                @NonNull Call<T> call,
+                Response<T> resp);
+
+        public abstract void onResponseError(
+                @NonNull Call<T> call,
+                Response<T> resp);
     }
 }
